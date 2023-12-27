@@ -60,8 +60,8 @@ class TrtUnet(sd_unet.SdUnet):
         self.model_name = model_name
         self.lora_path = lora_path
         self.engine_vram_req = 0
-
-        self.loaded_config = self.configs[0]
+        self.profile_idx = 0
+        self.loaded_config = self.configs[self.profile_idx]
         self.shape_hash = 0
         self.engine = Engine(
             os.path.join(TRT_MODEL_DIR, self.loaded_config["filepath"])
@@ -101,14 +101,15 @@ class TrtUnet(sd_unet.SdUnet):
         return out
 
     def switch_engine(self, feed_dict):
-        valid_models, distances = modelmanager.get_valid_models(
+        valid_models, distances, idx = modelmanager.get_valid_models(
             self.model_name, feed_dict
         )
         if len(valid_models) == 0:
             raise ValueError(
                 "No valid profile found. Please go to the TensorRT tab and generate an engine with the necessary profile. If using hires.fix, you need an engine for both the base and upscaled resolutions. Otherwise, use the default (torch) U-Net."
             )
-
+        
+        self.profile_idx = idx[np.argmin(distances)]
         best = valid_models[np.argmin(distances)]
         if best["filepath"] == self.loaded_config["filepath"]:
             return
@@ -119,6 +120,7 @@ class TrtUnet(sd_unet.SdUnet):
 
     def activate(self):
         self.engine.load()
+        print(f"\nLoaded Profile: {self.profile_idx}")
         print(self.engine)
         self.engine_vram_req = self.engine.engine.device_memory_size
         self.engine.activate(True)
