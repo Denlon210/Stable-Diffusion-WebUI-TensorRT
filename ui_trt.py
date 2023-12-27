@@ -95,6 +95,9 @@ def export_unet_to_trt(
     max_textlen = (token_count_max // 75) * 77
     if static_shapes:
         min_textlen = max_textlen = opt_textlen
+        batch_min = batch_max = batch_opt
+        height_min = height_max = height_opt
+        width_min = width_max = width_opt
 
     if shared.sd_model.is_sdxl:
         pipeline = PIPELINE_TYPE.SD_XL_BASE
@@ -544,7 +547,7 @@ def on_ui_tabs():
                                     elem_id="trt_static_shapes",
                                 )
 
-                            with gr.Column(elem_id="trt_max_batch"):
+                            with gr.Column(elem_id="trt_batch"):
                                 trt_min_batch = gr.Slider(
                                     minimum=1,
                                     maximum=16,
