@@ -1,6 +1,6 @@
 import json
 from json import JSONEncoder
-
+import copy
 import os
 from logging import info, warning
 from dataclasses import dataclass
@@ -64,7 +64,7 @@ class ModelManager:
             if trt_file.endswith(".trt")
         ]
 
-        tmp_all_models = self.all_models.copy()
+        tmp_all_models = copy.deepcopy(self.all_models)
         for cc, base_models in tmp_all_models.items():
             for base_model, models in base_models.items():
                 tmp_config_list = {}
@@ -76,7 +76,7 @@ class ModelManager:
                         continue
                     tmp_config_list[model_config["filepath"]] = model_config
                 
-                tmp_config_list = list(tmp_config_list.values()) 
+                tmp_config_list = list(tmp_config_list.values())
                 if len(tmp_config_list) == 0:
                     self.all_models[cc].pop(base_model)
                 else:
