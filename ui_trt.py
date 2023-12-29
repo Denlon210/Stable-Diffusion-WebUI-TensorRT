@@ -1,4 +1,5 @@
 import os
+import fnmatch
 
 from modules import sd_models, shared
 import gradio as gr
@@ -6,6 +7,7 @@ import gradio as gr
 from modules.call_queue import wrap_gradio_gpu_call
 from modules.shared import cmd_opts
 from modules.ui_components import FormRow
+from modules import paths_internal
 
 from exporter import export_onnx, export_trt
 from utilities import PIPELINE_TYPE, Engine
@@ -194,7 +196,7 @@ def export_lora_to_trt(lora_name, force_export):
 
     model_hash = shared.sd_model.sd_checkpoint_info.hash
     model_name = shared.sd_model.sd_checkpoint_info.model_name
-    base_name = f"{model_name}"  # _{model_hash}
+    base_name = f"{model_name}"
 
     available_lora_models = get_lora_checkpoints()
     lora_name = lora_name.split(" ")[0]
@@ -838,3 +840,35 @@ def on_ui_tabs():
         )
 
     return [(trt_interface, "TensorRT", "tensorrt")]
+
+
+def search_models(folder_path, use_trt = False):
+    extensions = ['trt', 'safetensors']
+    arr = []
+    
+    for root, dirs, files in os.walk(folder_path):
+        for file_name in files:
+            if any(fnmatch.fnmatch(file_name, f'*.{ext}') for ext in extensions):
+                if use_trt:
+                    arr.append(file_name.split('_')[0] + ".safetensors")
+                else:
+                    arr.append(file_name)
+    
+    return arr
+
+
+print(f"Auto Convert Models to TensorRT: {shared.cmd_opts.models_to_trt}")
+if shared.cmd_opts.models_to_trt:
+    SD_MODEL_DIR = os.path.join(paths_internal.models_path, "Stable-diffusion")
+    
+    all_models = search_models(SD_MODEL_DIR, False)
+    trt_models = search_models(TRT_MODEL_DIR, True)
+    missing_models = list(set(all_models) - set(trt_models))
+    
+    for model_name in missing_models:
+        print(f"Exporting {model_name} to TensorRT")
+        filename = os.path.join(paths_internal.models_path, "Stable-diffusion", model_name)
+        checkpoint_info = sd_models.CheckpointInfo(filename)
+        sd_models.load_model(checkpoint_info)
+        export_unet_to_trt(1, 1, 1, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
+        sleep(1)
