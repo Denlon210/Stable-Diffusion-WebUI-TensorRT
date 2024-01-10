@@ -106,7 +106,7 @@ class TrtUnet(sd_unet.SdUnet):
         )
         if len(valid_models) == 0:
             raise ValueError(
-                "No valid profile found. Please go to the TensorRT tab and generate an engine with the necessary profile. If using hires.fix, you need an engine for both the base and upscaled resolutions. Otherwise, use the default (torch) U-Net."
+                f"No valid profile found for ({self.model_name}) LOWRES. Please go to the TensorRT tab and generate an engine with the necessary profile."
             )
         
         self.profile_idx = idx[np.argmin(distances)]
@@ -129,6 +129,7 @@ class TrtUnet(sd_unet.SdUnet):
             self.engine.refit_from_dump(self.lora_path)
 
     def deactivate(self):
+        print("Deactivating TensorRT engine.")
         self.shape_hash = 0
         del self.engine
 
