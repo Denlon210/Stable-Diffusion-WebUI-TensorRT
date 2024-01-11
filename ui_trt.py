@@ -4,6 +4,7 @@ import json
 import fnmatch
 import logging
 from collections import defaultdict
+from time import sleep
 
 import torch
 from safetensors.torch import save_file
@@ -270,8 +271,10 @@ def get_lora_checkpoints():
         if os.path.exists(config_file):
             with open(config_file, "r") as f:
                 config = json.load(f)
-            version = SDVersion.from_str(config["sd version"])
-
+            if "sd version" in config:
+                version = SDVersion.from_str(config["sd version"])
+            else:
+                version = SDVersion.Unknown
         else:
             version = SDVersion.Unknown
             print(
@@ -751,6 +754,7 @@ def search_models(folder_path, use_trt = False):
             if any(fnmatch.fnmatch(file_name, f'*.{ext}') for ext in extensions):
                 if use_trt:
                     arr.append(file_name.split('_')[0] + ".safetensors")
+                    arr.append(file_name.split('_')[0] + "_" + file_name.split('_')[1] + ".safetensors")
                 else:
                     arr.append(file_name)
     
@@ -770,5 +774,8 @@ if shared.cmd_opts.models_to_trt:
         filename = os.path.join(paths_internal.models_path, "Stable-diffusion", model_name)
         checkpoint_info = sd_models.CheckpointInfo(filename)
         sd_models.load_model(checkpoint_info)
-        export_unet_to_trt(1, 1, 1, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
+        if "inpaint" in model_name.lower():
+            export_unet_to_trt(1, 1, 2, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
+        else:
+            export_unet_to_trt(1, 1, 1, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
         sleep(1)

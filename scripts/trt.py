@@ -262,8 +262,6 @@ class TensorRTScript(scripts.Script):
             gr.Error(e)
             raise e
 
-        self.apply_unet(sd_unet_option)
-
     def apply_unet(self, sd_unet_option):
         if (
             sd_unet_option == sd_unet.current_unet_option
@@ -276,7 +274,7 @@ class TensorRTScript(scripts.Script):
             sd_unet.current_unet.deactivate()
 
         if self.torch_unet:
-            gr.Warning("Enabling PyTorch fallback as no engine was found.")
+            # gr.Warning("Enabling PyTorch fallback as no engine was found.")
             sd_unet.current_unet = None
             sd_unet.current_unet_option = sd_unet_option
             shared.sd_model.model.diffusion_model.to(devices.device)
