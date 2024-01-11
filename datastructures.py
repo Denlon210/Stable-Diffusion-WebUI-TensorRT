@@ -192,27 +192,46 @@ class ProfileSettings:
         else:
             raise Exception("Uncovered case in get_batch_dim")
 
+
 class ProfilePrests:
     def __init__(self):
         self.profile_presets = {
-            "256x256 - 768x768": ProfileSettings(
+            "256x256 - 768x768 | Batch Size 1 (Static)": ProfileSettings(
                 1, 1, 1, 256, 512, 768, 256, 512, 768, 75, 150, 300
             ),
-            "512x512 - 1024x1024": ProfileSettings(
+            "512x512 - 1024x1024 | Batch Size 1 (Static)": ProfileSettings(
                 1, 1, 1, 512, 768, 1024, 512, 768, 1024, 75, 150, 300
             ),
-            "256x256 - 1280x1280": ProfileSettings(
+            "256x256 - 1280x1280 | Batch Size 1 (Static)": ProfileSettings(
                 1, 1, 1, 256, 768, 1280, 256, 768, 1280, 75, 150, 300
             ),
-            "768x768 - 2048x2048": ProfileSettings(
+            "768x768 - 2048x2048 | Batch Size 1 (Static)": ProfileSettings(
                 1, 1, 1, 768, 1024, 2048, 768, 1024, 2048, 75, 150, 300
+            ),
+            "512x512 | Batch Size 1 (Static)": ProfileSettings(
+                1, 1, 1, 512, 512, 512, 512, 512, 512, 75, 75, 75
+            ),
+            "768x768 | Batch Size 1 (Static)": ProfileSettings(
+                1, 1, 1, 768, 768, 768, 768, 768, 768, 75, 75, 75
+            ),
+            "1024x1024 | Batch Size 1 (Static)": ProfileSettings(
+                1, 1, 1, 1024, 1024, 1024, 1024, 1024, 1024, 75, 75, 75
+            ),
+            "256x256 - 512x512 | Batch Size 1-4": ProfileSettings(
+                1, 1, 4, 256, 512, 512, 256, 512, 512, 75, 75, 150
+            ),
+            "512x512 - 768x768 | Batch Size 1-4": ProfileSettings(
+                1, 1, 4, 512, 512, 768, 512, 512, 768, 75, 75, 150
+            ),
+            "768x768 - 1024x1024 | Batch Size 1-4": ProfileSettings(
+                1, 1, 4, 768, 1024, 1024, 768, 1024, 1024, 75, 75, 150
             ),
         }
         self.default = ProfileSettings(
             1, 1, 4, 512, 512, 768, 512, 512, 768, 75, 75, 150
         )
         self.default_xl = ProfileSettings(
-            1, 1, 4, 768, 1024, 1024, 768, 1024, 1024, 75, 75, 150
+            1, 1, 1, 1024, 1024, 1024, 1024, 1024, 1024, 75, 75, 75
         )
 
     def get_settings_from_version(self, version: str):

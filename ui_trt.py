@@ -83,7 +83,6 @@ def export_unet_to_trt(
     use_fp32 = is_fp32()
 
     print(f"Exporting {model_name} to TensorRT using - {profile_settings}")
-    print(f"SDXL: {is_xl}")
     profile_settings.token_to_dim(static_shapes)
 
     model_hash = shared.sd_model.sd_checkpoint_info.hash
@@ -204,7 +203,7 @@ def export_lora_to_trt(lora_name, force_export):
     if not os.path.exists(weights_map_path):
         modelobj.export_weights_map(onnx_base_path, weights_map_path)
 
-    lora_trt_name = f"{lora_name}.trt"
+    lora_trt_name = f"{lora_name}.lora"
     lora_trt_path = os.path.join(TRT_MODEL_DIR, lora_trt_name)
 
     if os.path.exists(lora_trt_path) and not force_export:
@@ -224,15 +223,6 @@ def export_lora_to_trt(lora_name, force_export):
 
     save_file(refit_dict, lora_trt_path)
 
-    modelmanager.add_lora_entry(
-        model_name,
-        lora_name,
-        lora_trt_name,
-        is_fp32(),
-        False,
-        0,
-        4,
-    )
 
     return "## Exported Successfully \n"
 
@@ -278,11 +268,7 @@ def get_lora_checkpoints():
         if os.path.exists(config_file):
             with open(config_file, "r") as f:
                 config = json.load(f)
-            
-            if "sd version" in config:
-                version = SDVersion.from_str(config["sd version"])
-            else:
-                version = SDVersion.Unknown
+            version = SDVersion.from_str(config["sd version"])
 
         else:
             version = SDVersion.Unknown
@@ -377,9 +363,9 @@ def engine_profile_card():
     loras_md = {}
     for base_model, models in available_models.items():
         for i, m in enumerate(models):
-            if m["config"].lora:
-                loras_md[base_model] = m.get("base_model", None)
-                continue
+            # if m["config"].lora:
+            #     loras_md[base_model] = m.get("base_model", None)
+            #     continue
 
             s_min, s_opt, s_max = m["config"].profile.get(
                 "sample", [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
@@ -404,10 +390,11 @@ def engine_profile_card():
 
             model_md[base_model].append(profile_table)
 
-    for lora, base_model in loras_md.items():
-        model_md[f"{lora} (*{base_model}*)"] = model_md[base_model]
+    available_loras = modelmanager.available_loras()
+    for lora, path in available_loras.items():
+        loras_md[f"{lora}"] = ""
 
-    return model_md
+    return model_md, loras_md
 
 
 def on_ui_tabs():
@@ -667,12 +654,19 @@ def on_ui_tabs():
 
         def get_trt_profiles_markdown():
             profiles_md_string = ""
-            for model, profiles in engine_profile_card().items():
+            engine_cards, lora_cards = engine_profile_card()
+            for model, profiles in engine_cards.items():
                 profiles_md_string += f"<details><summary>{model} ({len(profiles)} Profiles)</summary>\n\n"
                 for i, profile in enumerate(profiles):
                     profiles_md_string += f"#### Profile {i} \n{profile}\n\n"
                 profiles_md_string += "</details>\n"
             profiles_md_string += "</details>\n"
+
+            profiles_md_string += "\n --- \n ## LoRA Profiles \n"
+            for model, details in lora_cards.items():
+                profiles_md_string += f"<details><summary>{model}</summary>\n\n"
+                profiles_md_string += details
+                profiles_md_string += "</details>\n"
             return profiles_md_string
 
         with gr.Column(variant="panel"):
