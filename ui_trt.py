@@ -774,8 +774,5 @@ if shared.cmd_opts.models_to_trt:
         filename = os.path.join(paths_internal.models_path, "Stable-diffusion", model_name)
         checkpoint_info = sd_models.CheckpointInfo(filename)
         sd_models.load_model(checkpoint_info)
-        if "inpaint" in model_name.lower():
-            export_unet_to_trt(1, 1, 2, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
-        else:
-            export_unet_to_trt(1, 1, 1, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
+        export_unet_to_trt(1, 1, 1, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
         sleep(1)
