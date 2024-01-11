@@ -1,6 +1,7 @@
 import os
 import gc
 import json
+import fnmatch
 import logging
 from collections import defaultdict
 
@@ -13,6 +14,7 @@ from modules.ui_components import FormRow
 from modules import sd_hijack, sd_models, shared
 from modules.ui_common import refresh_symbol
 from modules.ui_components import ToolButton
+from modules import paths_internal
 
 from model_helper import UNetModel
 from exporter import export_onnx, export_trt, export_lora
@@ -738,3 +740,35 @@ def on_ui_tabs():
         )
 
     return [(trt_interface, "TensorRT", "tensorrt")]
+
+
+def search_models(folder_path, use_trt = False):
+    extensions = ['trt', 'safetensors']
+    arr = []
+    
+    for root, dirs, files in os.walk(folder_path):
+        for file_name in files:
+            if any(fnmatch.fnmatch(file_name, f'*.{ext}') for ext in extensions):
+                if use_trt:
+                    arr.append(file_name.split('_')[0] + ".safetensors")
+                else:
+                    arr.append(file_name)
+    
+    return arr
+
+
+print(f"Auto Convert Models to TensorRT: {shared.cmd_opts.models_to_trt}")
+if shared.cmd_opts.models_to_trt:
+    SD_MODEL_DIR = os.path.join(paths_internal.models_path, "Stable-diffusion")
+    
+    all_models = search_models(SD_MODEL_DIR, False)
+    trt_models = search_models(TRT_MODEL_DIR, True)
+    missing_models = list(set(all_models) - set(trt_models))
+    
+    for model_name in missing_models:
+        print(f"Exporting {model_name} to TensorRT")
+        filename = os.path.join(paths_internal.models_path, "Stable-diffusion", model_name)
+        checkpoint_info = sd_models.CheckpointInfo(filename)
+        sd_models.load_model(checkpoint_info)
+        export_unet_to_trt(1, 1, 1, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
+        sleep(1)
