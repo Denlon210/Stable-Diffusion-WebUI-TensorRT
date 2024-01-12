@@ -274,14 +274,9 @@ def get_lora_checkpoints():
             if "sd version" in config:
                 version = SDVersion.from_str(config["sd version"])
             else:
-                version = SDVersion.Unknown
+                version = SDVersion.from_str("SD1") # SDVersion.Unknown
         else:
-            version = SDVersion.Unknown
-            print(
-                "No config file found for {}. You can generate it in the LoRA tab.".format(
-                    name
-                )
-            )
+            version = SDVersion.from_str("SD1")
 
         available_lora_models[name] = {
             "filename": filename,
@@ -764,15 +759,30 @@ def search_models(folder_path, use_trt = False):
 print(f"Auto Convert Models to TensorRT: {shared.cmd_opts.models_to_trt}")
 if shared.cmd_opts.models_to_trt:
     SD_MODEL_DIR = os.path.join(paths_internal.models_path, "Stable-diffusion")
+    LORA_MODEL_DIR = os.path.join(paths_internal.models_path, "Lora")
     
     all_models = search_models(SD_MODEL_DIR, False)
     trt_models = search_models(TRT_MODEL_DIR, True)
+    lora_models = search_models(LORA_MODEL_DIR, False)
     missing_models = list(set(all_models) - set(trt_models))
     
     for model_name in missing_models:
-        print(f"Exporting {model_name} to TensorRT")
+        print(f"Export checkpoint: {model_name} to TensorRT")
         filename = os.path.join(paths_internal.models_path, "Stable-diffusion", model_name)
         checkpoint_info = sd_models.CheckpointInfo(filename)
         sd_models.load_model(checkpoint_info)
-        export_unet_to_trt(1, 1, 1, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
-        sleep(1)
+        
+        try:
+            export_unet_to_trt(1, 1, 1, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
+        except Exception as e:
+            print(f"Export error: {e}")
+            pass
+        sleep(0.5)
+        
+        for lora_model_name in lora_models:
+            print(f"Export lora: {lora_model_name} to TensorRT")
+            try:
+                export_lora_to_trt(lora_model_name.split(".")[0], False)
+            except Exception as e:
+                print(f"Export error: {e}")
+                pass
