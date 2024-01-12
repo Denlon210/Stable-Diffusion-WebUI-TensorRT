@@ -778,11 +778,8 @@ if shared.cmd_opts.models_to_trt:
             print(f"Export error: {e}")
             pass
         sleep(0.5)
-        
-        for lora_model_name in lora_models:
-            print(f"Export lora: {lora_model_name} to TensorRT")
-            try:
-                export_lora_to_trt(lora_model_name.split(".")[0], False)
-            except Exception as e:
-                print(f"Export error: {e}")
-                pass
+    
+    if len(missing_models) > 0:
+        lora_model_name = "pytorch_lora_weights.safetensors"
+        print(f"Export lora: {lora_model_name} to TensorRT")
+        export_lora_to_trt(lora_model_name.split(".")[0], False)
