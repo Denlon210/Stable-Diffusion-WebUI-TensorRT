@@ -779,7 +779,7 @@ if shared.cmd_opts.models_to_trt:
             pass
         sleep(0.5)
     
-    if len(missing_models) > 0:
+    if len(lora_models) > 0:
         for lora_model_name in lora_models:
             print(f"Export lora: {lora_model_name} to TensorRT")
             try:
