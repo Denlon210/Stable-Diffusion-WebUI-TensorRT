@@ -773,11 +773,11 @@ if shared.cmd_opts.models_to_trt:
         sd_models.load_model(checkpoint_info)
         
         try:
-            export_unet_to_trt(1, 1, 1, 512, 768, 1024, 512, 768, 1024, 75, 150, 300, False, False, "New")
+            export_unet_to_trt(1, 1, 1, 768, 1024, 1536, 768, 1024, 1536, 75, 150, 300, False, False, "New")
         except Exception as e:
             print(f"Export error: {e}")
             pass
-        sleep(0.5)
+        sleep(0.1)
     
     if len(lora_models) > 0:
         for lora_model_name in lora_models:
